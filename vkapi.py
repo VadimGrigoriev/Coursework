@@ -10,17 +10,8 @@ class VkUser:
             'v': version
         }
 
-    def user_filename(self, user_id=None):
-        info_user_url = self.url + 'users.get'
-        info_user_params = {
-            'user_ids': user_id
-        }
-        res = requests.get(info_user_url, params={**self.params, **info_user_params}).json()
-        info_user = res['response'][0]
-        filename = f"{info_user['first_name']} {info_user['last_name']}"
-        return filename
-
     def get_users_photos(self, user_id=None, count=5):
+        """Метод для получения информации о фотографиях с альбома пользователя"""
         get_users_photos_url = self.url + 'photos.get'
         get_users_photos_params = {
             'owner_id': user_id,
@@ -30,9 +21,13 @@ class VkUser:
             'count': count
         }
         res = requests.get(get_users_photos_url, params={**self.params, **get_users_photos_params})
-        return res.json()
+        if res.ok:
+            return res.json()
+        else:
+            print('Ошибка при получении информации о фотографиях.')
 
     def get_list_of_photos(self, user_id=None, count=5):
+        """Метод создает список с основной информацией о фотографиях пользователя"""
         photos = self.get_users_photos(user_id, count)
         list_photos = []
         for photo in photos['response']['items']:

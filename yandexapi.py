@@ -1,6 +1,5 @@
 import requests
 from tqdm import tqdm
-import json
 
 
 class YandexDisk:
@@ -13,34 +12,38 @@ class YandexDisk:
             'Authorization': f'OAuth {self.token}'
         }
 
-    def create_folder(self, title):
-        url = 'https://cloud-api.yandex.net/v1/disk/resources'
-        headers = self.get_headers()
-        params = {'path': title}
-        res = requests.put(url, headers=headers, params=params)
-        return res.json()
+    def create_folder(self):
+        """Метод создает папку на Яндекс.Диск"""
+        while True:
+            name_folder = input('Введите название папки: ')
+            url = 'https://cloud-api.yandex.net/v1/disk/resources'
+            headers = self.get_headers()
+            params = {'path': name_folder}
+            res = requests.put(url, headers=headers, params=params)
+            if res.ok:
+                return name_folder
+            else:
+                print('Папка с таким названием уже существует, придумайте новое название.')
 
-    @staticmethod
-    def get_file(photo_list):
-        for i in photo_list:
-            del i['url']
-        with open('info.json', 'w') as file_info:
-            json.dump(photo_list, file_info, ensure_ascii=False, indent=2)
-
-    def upload_file(self, link, disk_filename):
+    def upload_file(self, link, name_folder):
+        """Метод для загрузки файла на Яндекс.Диск по URL"""
         url = 'https://cloud-api.yandex.net/v1/disk/resources/upload'
         headers = self.get_headers()
         params = {
-            'path': disk_filename,
+            'path': name_folder,
             'url': link
         }
         res = requests.post(url, headers=headers, params=params)
+        if res.ok:
+            pass
+        else:
+            print('Ошибка при загрузке фотографии на Яндекс.Диск.')
 
-    def upload_list_of_photos(self, list_photos, user_filename):
+    def upload_list_of_photos(self, list_photos, name_folder):
+        """Метод загружает список фотографий на Яндекс.Диск по URL"""
         pbar = tqdm(list_photos, ncols=81, desc='Выполнение...')
         for photo in pbar:
-            disk_filename = f"{user_filename}/{photo['file_name']}"
+            disk_filename = f"{name_folder}/{photo['file_name']}"
             link = photo['url']
             self.upload_file(link, disk_filename)
-        self.get_file(list_photos)
         print('Фотографии загружены!')
